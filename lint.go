@@ -488,9 +488,6 @@ func (f *file) lintExported() {
 
 	var lastGen *ast.GenDecl // last GenDecl entered.
 
-	// Set of GenDecls that have already had missing comments flagged.
-	genDeclMissingComments := make(map[*ast.GenDecl]bool)
-
 	f.walk(func(node ast.Node) bool {
 		switch v := node.(type) {
 		case *ast.GenDecl:
@@ -501,7 +498,6 @@ func (f *file) lintExported() {
 			lastGen = v
 			return true
 		case *ast.FuncDecl:
-			f.lintFuncDoc(v)
 			if v.Recv == nil {
 				// Only check for stutter on functions, not methods.
 				// Method names are not used package-qualified.
@@ -515,12 +511,10 @@ func (f *file) lintExported() {
 			if doc == nil {
 				doc = lastGen.Doc
 			}
-			f.lintTypeDoc(v, doc)
 			f.checkStutter(v.Name, "type")
 			// Don't proceed inside types.
 			return false
 		case *ast.ValueSpec:
-			f.lintValueSpecDoc(v, lastGen, genDeclMissingComments)
 			return false
 		}
 		return true
